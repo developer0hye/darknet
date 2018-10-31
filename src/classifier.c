@@ -542,12 +542,13 @@ void validate_classifier_single(char *datacfg, char *filename, char *weightfile)
             }
         }
         image im = load_image_color(paths[i], 0, 0);
-        image resized = resize_min(im, net.w);
+        image resized = resize_image(im, net.w, net.h);
         image crop = crop_image(resized, (resized.w - net.w)/2, (resized.h - net.h)/2, net.w, net.h);
-        //show_image(im, "orig");
-        //show_image(crop, "cropped");
-        //cvWaitKey(0);
-        float *pred = network_predict(net, crop.data);
+        show_image(im, "orig");
+        show_image(crop, "cropped");
+        show_image(resized, "resized");
+        cvWaitKey(10);
+        float *pred = network_predict(net, resized.data);
         if(net.hierarchy) hierarchy_predictions(pred, net.outputs, net.hierarchy, 1);
 
         if(resized.data != im.data) free_image(resized);
