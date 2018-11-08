@@ -117,20 +117,40 @@ matrix load_image_augment_paths(char **paths, int n, int use_flip, int min, int 
 
     for(i = 0; i < n; ++i){
         image im = load_image_color(paths[i], 0, 0);
-        image crop = random_augment_image(im, angle, aspect, min, max, size);
-        int flip = use_flip ? random_gen() % 2 : 0;
-        if (flip)
-            flip_image(crop);
-        random_distort_image(crop, hue, saturation, exposure);
 
-        /*
-        show_image(im, "orig");
-        show_image(crop, "crop");
-        cvWaitKey(0);
-        */
-        free_image(im);
-        X.vals[i] = crop.data;
-        X.cols = crop.h*crop.w*crop.c;
+	if(min == -1 && max == -1)
+	{
+		float rad = rand_uniform(-angle, angle) * TWO_PI / 360.;
+		
+		image resize = resize_image(im, size, size);
+		image rotate = rotate_image(resize, rad);
+		
+
+		free_image(resize);
+		
+		X.vals[i] = rotate.data;
+		X.cols = rotate.h*rotate.w*rotate.c;
+	}
+	else
+	{
+		image crop = random_augment_image(im, angle, aspect, min, max, size);
+
+		int flip = use_flip ? random_gen() % 2 : 0;
+		if (flip)
+		    flip_image(crop);
+		random_distort_image(crop, hue, saturation, exposure);
+
+		/*
+		show_image(im, "orig");
+		show_image(crop, "crop");
+		cvWaitKey(0);
+		*/
+		
+		X.vals[i] = crop.data;
+		X.cols = crop.h*crop.w*crop.c;
+	}
+
+	free_image(im);
     }
     return X;
 }
@@ -454,6 +474,7 @@ void fill_truth(char *path, char **labels, int k, float *truth)
         if(strstr(path, labels[i])){
             truth[i] = 1;
             ++count;
+	//	printf("%s %s %d\n", path, labels[i], i);
         }
     }
     if(count != 1) printf("Too many or too few labels: %d, %s\n", count, path);
